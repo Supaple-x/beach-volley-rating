@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="ru"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>NAGORNAYA - Leaderboard Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#f27f0d",
+                        "background-light": "#f8f7f5",
+                        "background-dark": "#0f172a",
+                        "accent-blue": "#38bdf8",
+                    },
+                    fontFamily: {
+                        "display": ["Lexend", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .medal-gold { color: #fbbf24; }
+        .medal-silver { color: #94a3b8; }
+        .medal-bronze { color: #b45309; }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen">
+<!-- Top Navigation Bar -->
+<header class="sticky top-0 z-50 glass-panel border-b border-white/10 px-6 lg:px-20 py-4">
+<div class="max-w-[1280px] mx-auto flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="bg-primary p-1.5 rounded-lg">
+<svg class="size-6 text-background-dark" fill="currentColor" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path d="M8.57829 8.57829C5.52816 11.6284 3.451 15.5145 2.60947 19.7452C1.76794 23.9758 2.19984 28.361 3.85056 32.3462C5.50128 36.3314 8.29667 39.7376 11.8832 42.134C15.4698 44.5305 19.6865 45.8096 24 45.8096C28.3135 45.8096 32.5302 44.5305 36.1168 42.134C39.7033 39.7375 42.4987 36.3314 44.1494 32.3462C45.8002 28.361 46.2321 23.9758 45.3905 19.7452C44.549 15.5145 42.4718 11.6284 39.4217 8.57829L24 24L8.57829 8.57829Z"></path>
+</svg>
+</div>
+<h2 class="text-xl font-bold tracking-tighter uppercase">Nagornaya</h2>
+</div>
+<nav class="hidden md:flex items-center gap-10">
+<a class="text-primary font-semibold border-b-2 border-primary pb-1" href="#">Рейтинг</a>
+<a class="text-slate-400 hover:text-white transition-colors" href="#">Турниры</a>
+<a class="text-slate-400 hover:text-white transition-colors" href="#">Игроки</a>
+</nav>
+<div class="flex items-center gap-4">
+<button class="bg-primary hover:bg-primary/90 text-background-dark px-5 py-2 rounded-lg font-bold text-sm transition-all shadow-lg shadow-primary/20">
+                    ПРОФИЛЬ
+                </button>
+<div class="size-10 rounded-full border-2 border-slate-700 bg-cover bg-center" data-alt="User profile avatar portrait" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuC8r1asPxZnB3QYWWEtrHR6073vxyh4TtYJJRm_crzx3ebKsU7PZ5NmdLdWQmluekSYdxLoC1P0LR-gMIvl8JelJbO8W145vjyfXKfNdGOHQpdj2PL4SzumEDJoHiTt3O1Rqf4nLzhW8hQRXxE4zoabO0ykjzgzIcw3KwX2xHDFOmGo8m64qIotFpBdIk8n3DT-gs5X11HvzhrgA9JW4qILF_r5LU6bgiLNz7m2d3UzgBg74J9H5uy6zM0cKSjD4kbPm8XcXzJH1Nw');"></div>
+</div>
+</div>
+</header>
+<main class="max-w-[1280px] mx-auto px-6 lg:px-20 py-10">
+<!-- Welcome Section -->
+<div class="flex flex-col md:flex-row md:items-end justify-between mb-8">
+<div>
+<h1 class="text-4xl font-bold tracking-tight mb-2">Рейтинг Игроков</h1>
+<p class="text-slate-400">Текущий сезон: Лето 2024 • Обновлено 5 минут назад</p>
+</div>
+<div class="mt-6 md:mt-0 flex gap-3">
+<button class="flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 border border-white/5 transition-colors">
+<span class="material-symbols-outlined text-sm">download</span>
+<span class="text-sm font-medium">Экспорт CSV</span>
+</button>
+</div>
+</div>
+<!-- Stats Overview -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
+<div class="glass-panel p-6 rounded-xl relative overflow-hidden group">
+<div class="absolute -right-4 -top-4 size-24 bg-primary/10 rounded-full blur-2xl group-hover:bg-primary/20 transition-all"></div>
+<p class="text-slate-400 text-sm font-medium mb-1 uppercase tracking-wider">Всего игроков</p>
+<div class="flex items-end gap-2">
+<p class="text-3xl font-bold">1,482</p>
+<span class="text-green-400 text-xs font-bold mb-1.5">+12 на этой неделе</span>
+</div>
+</div>
+<div class="glass-panel p-6 rounded-xl relative overflow-hidden group">
+<div class="absolute -right-4 -top-4 size-24 bg-accent-blue/10 rounded-full blur-2xl group-hover:bg-accent-blue/20 transition-all"></div>
+<p class="text-slate-400 text-sm font-medium mb-1 uppercase tracking-wider">Матчи сегодня</p>
+<div class="flex items-end gap-2">
+<p class="text-3xl font-bold">54</p>
+<span class="text-slate-400 text-xs font-medium mb-1.5">В 4 турнирах</span>
+</div>
+</div>
+<div class="glass-panel p-6 rounded-xl relative overflow-hidden group">
+<div class="absolute -right-4 -top-4 size-24 bg-purple-500/10 rounded-full blur-2xl group-hover:bg-purple-500/20 transition-all"></div>
+<p class="text-slate-400 text-sm font-medium mb-1 uppercase tracking-wider">Средний Elo</p>
+<div class="flex items-end gap-2">
+<p class="text-3xl font-bold">1,245</p>
+<span class="text-slate-400 text-xs font-medium mb-1.5">Лига Pro</span>
+</div>
+</div>
+</div>
+<!-- Filters and Search -->
+<div class="glass-panel p-4 rounded-xl mb-6 flex flex-col lg:flex-row items-center gap-4">
+<div class="relative flex-1 w-full">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+<input class="w-full bg-slate-900/50 border-white/10 rounded-lg pl-12 pr-4 py-3 focus:ring-primary focus:border-primary text-white placeholder:text-slate-500" placeholder="Поиск игрока по имени или ID..." type="text"/>
+</div>
+<div class="flex items-center gap-3 w-full lg:w-auto">
+<button class="flex-1 lg:flex-none flex items-center justify-between gap-4 px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg hover:border-slate-500 transition-colors">
+<span class="text-sm font-medium">Пол: Все</span>
+<span class="material-symbols-outlined text-slate-400">expand_more</span>
+</button>
+<button class="flex-1 lg:flex-none flex items-center justify-between gap-4 px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg hover:border-slate-500 transition-colors">
+<span class="text-sm font-medium">Лига: Лига A</span>
+<span class="material-symbols-outlined text-slate-400">expand_more</span>
+</button>
+<button class="flex-1 lg:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-primary/20 text-primary border border-primary/30 rounded-lg hover:bg-primary/30 transition-colors">
+<span class="material-symbols-outlined text-[18px]">filter_list</span>
+<span class="text-sm font-bold uppercase tracking-tight">Фильтры</span>
+</button>
+</div>
+</div>
+<!-- Leaderboard Table -->
+<div class="glass-panel rounded-xl overflow-hidden shadow-2xl">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-slate-900/50 text-slate-400 uppercase text-[11px] font-bold tracking-[0.1em] border-b border-white/5">
+<th class="px-6 py-4 w-20">Место</th>
+<th class="px-6 py-4">Игрок</th>
+<th class="px-6 py-4 text-center">Elo Рейтинг</th>
+<th class="px-6 py-4 text-center">Игры</th>
+<th class="px-6 py-4 text-center">Винрейт %</th>
+<th class="px-6 py-4 text-center">Динамика</th>
+<th class="px-6 py-4"></th>
+</tr>
+</thead>
+<tbody class="divide-y divide-white/5">
+<!-- Row 1 -->
+<tr class="hover:bg-primary/5 transition-colors group">
+<td class="px-6 py-5">
+<div class="flex items-center justify-center size-8 bg-slate-800 rounded-lg shadow-inner">
+<span class="material-symbols-outlined medal-gold text-2xl">workspace_premium</span>
+</div>
+</td>
+<td class="px-6 py-5">
+<div class="flex items-center gap-4">
+<div class="size-10 rounded-full bg-cover bg-center border border-white/10" data-alt="Player profile picture" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCchrN3rXN3ch0p6xS0zDXe3rd2w4Kzh_FDLFIQF5qWAPy0nYC_S52_73fNjI2qERzyYUBldPFmWRNf_e5nbfxEmkOYa_pVT7Wc-T0XWwNmcsPFm5bJ6cKXfWI_QAeakoql_HHc3l-PJ2FN9n7YQI4i1aYJZhPsatxWWqEB2HusaAtDf9FsrKSgFbaMZv3Qqr3yMn4zVeIcEz2sjhP8PmoTmQV74w0MTeU3_4MgDoCrKlBENz6OOLydFqTu_WMJjcd8DTBcaWCOhC0');"></div>
+<div>
+<div class="font-bold text-lg leading-tight">Александр Волков</div>
+<div class="text-xs text-slate-400">ID: 48122 • Лига A</div>
+</div>
+</div>
+</td>
+<td class="px-6 py-5 text-center">
+<span class="text-accent-blue font-bold text-2xl tracking-tighter">2,450</span>
+</td>
+<td class="px-6 py-5 text-center font-medium">142</td>
+<td class="px-6 py-5 text-center">
+<div class="w-24 bg-slate-800 rounded-full h-1.5 mx-auto mb-1 overflow-hidden">
+<div class="bg-green-500 h-full rounded-full" style="width: 78%"></div>
+</div>
+<span class="text-sm font-bold text-green-400">78.2%</span>
+</td>
+<td class="px-6 py-5 text-center">
+<div class="flex items-center justify-center text-green-400 font-bold gap-1">
+<span class="material-symbols-outlined text-[18px]">trending_up</span>
+<span>+42</span>
+</div>
+</td>
+<td class="px-6 py-5 text-right">
+<button class="p-2 hover:bg-white/10 rounded-lg transition-colors">
+<span class="material-symbols-outlined text-slate-400">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-primary/5 transition-colors group">
+<td class="px-6 py-5">
+<div class="flex items-center justify-center size-8 bg-slate-800 rounded-lg shadow-inner">
+<span class="material-symbols-outlined medal-silver text-2xl">workspace_premium</span>
+</div>
+</td>
+<td class="px-6 py-5">
+<div class="flex items-center gap-4">
+<div class="size-10 rounded-full bg-cover bg-center border border-white/10" data-alt="Player profile picture" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAWm0yaNvWq_8YGdx9WT_lGhIzFk54nhAgUtOBWnnhxTz0NzSazhk0g_xdahg9b3ctsFEH-_Czb4fPc5r3iIXbk9xc3NeTHqH5bzf_i30uxd5g4fXnIfmlJ9mIwE9_d-k4Jl6uhrdaeCbzdbdfIpR_Zp5tdQYK0xTnbUoa-tMceErSZm-_-qYhHtXQSXAxQVXsFEkNNcic1mOIOltoyF_oqtKNe39YQFoD3ZRWQfcV7zJIQCPOqX06bQp4PSRi42GVJ0W3cQvAvoBw');"></div>
+<div>
+<div class="font-bold text-lg leading-tight">Елена Соколова</div>
+<div class="text-xs text-slate-400">ID: 32910 • Лига A</div>
+</div>
+</div>
+</td>
+<td class="px-6 py-5 text-center">
+<span class="text-accent-blue font-bold text-2xl tracking-tighter">2,315</span>
+</td>
+<td class="px-6 py-5 text-center font-medium">156</td>
+<td class="px-6 py-5 text-center">
+<div class="w-24 bg-slate-800 rounded-full h-1.5 mx-auto mb-1 overflow-hidden">
+<div class="bg-green-500 h-full rounded-full" style="width: 72%"></div>
+</div>
+<span class="text-sm font-bold text-green-400">72.4%</span>
+</td>
+<td class="px-6 py-5 text-center">
+<div class="flex items-center justify-center text-red-400 font-bold gap-1">
+<span class="material-symbols-outlined text-[18px]">trending_down</span>
+<span>-12</span>
+</div>
+</td>
+<td class="px-6 py-5 text-right">
+<button class="p-2 hover:bg-white/10 rounded-lg transition-colors">
+<span class="material-symbols-outlined text-slate-400">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-primary/5 transition-colors group">
+<td class="px-6 py-5">
+<div class="flex items-center justify-center size-8 bg-slate-800 rounded-lg shadow-inner">
+<span class="material-symbols-outlined medal-bronze text-2xl">workspace_premium</span>
+</div>
+</td>
+<td class="px-6 py-5">
+<div class="flex items-center gap-4">
+<div class="size-10 rounded-full bg-cover bg-center border border-white/10" data-alt="Player profile picture" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAA7zqu6d_t3RwUjqr02Ycsm4eI4Aw_im-llJIjTkXttglIe1uXTmiF9uMVKPxHPDhiEhfRg59DRRV_c1BbYeCuoGTgMrsNW-eZQVv4cCuTHxuk5iD6SqMSu_wW5axUHQ5fCoeGNiwL7h6Q99zEiU78nemdcDwh4q-PgV9vHGM06Ljk3ZWbbq_JNPxVxdL5HkY6OED2h8TCmJLFwqak7AtbErtaLnDnMY6Q88n0siuX5ZTcNOfZuppIlS-V5wv0Q0Uphjqc_Tm7qqk');"></div>
+<div>
+<div class="font-bold text-lg leading-tight">Дмитрий Морозов</div>
+<div class="text-xs text-slate-400">ID: 21094 • Лига A</div>
+</div>
+</div>
+</td>
+<td class="px-6 py-5 text-center">
+<span class="text-accent-blue font-bold text-2xl tracking-tighter">2,240</span>
+</td>
+<td class="px-6 py-5 text-center font-medium">98</td>
+<td class="px-6 py-5 text-center">
+<div class="w-24 bg-slate-800 rounded-full h-1.5 mx-auto mb-1 overflow-hidden">
+<div class="bg-green-500 h-full rounded-full" style="width: 65%"></div>
+</div>
+<span class="text-sm font-bold text-green-400">65.8%</span>
+</td>
+<td class="px-6 py-5 text-center">
+<div class="flex items-center justify-center text-slate-400 font-bold gap-1">
+<span class="material-symbols-outlined text-[18px]">horizontal_rule</span>
+<span>0</span>
+</div>
+</td>
+<td class="px-6 py-5 text-right">
+<button class="p-2 hover:bg-white/10 rounded-lg transition-colors">
+<span class="material-symbols-outlined text-slate-400">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-primary/5 transition-colors group">
+<td class="px-6 py-5 text-center">
+<span class="font-bold text-slate-500">4</span>
+</td>
+<td class="px-6 py-5">
+<div class="flex items-center gap-4">
+<div class="size-10 rounded-full bg-cover bg-center border border-white/10" data-alt="Player profile picture" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAUxaFQofoUCLdRjQTqlitwcvoOJ1g7AHVI0b7NkrmrELZ26hCPSDK1C3TMwiSEOLbZSra6lUIoK7lAgMPkOJw_VisWfu8uvjD-AFy-V30KA3wDp6zCpQ-9OytNNJFNDx9Mz19XMD2aJnHmKt9SVfAwqOBe9O1EXyAPosn1i_emMgiBa6FfoJQjfdtyhsf6XALBMPLLJRFaTHX8kcwygc1b20wF3RURMJ0BJRxxfeoj1XdjCHfoQHLlr9tDo6ErHnn6JiJTvLAcgf0');"></div>
+<div>
+<div class="font-bold text-lg leading-tight">Анна Лебедева</div>
+<div class="text-xs text-slate-400">ID: 88201 • Лига A</div>
+</div>
+</div>
+</td>
+<td class="px-6 py-5 text-center">
+<span class="text-accent-blue font-bold text-2xl tracking-tighter">2,185</span>
+</td>
+<td class="px-6 py-5 text-center font-medium">210</td>
+<td class="px-6 py-5 text-center">
+<div class="w-24 bg-slate-800 rounded-full h-1.5 mx-auto mb-1 overflow-hidden">
+<div class="bg-green-500 h-full rounded-full" style="width: 61%"></div>
+</div>
+<span class="text-sm font-bold text-green-400">61.2%</span>
+</td>
+<td class="px-6 py-5 text-center">
+<div class="flex items-center justify-center text-green-400 font-bold gap-1">
+<span class="material-symbols-outlined text-[18px]">trending_up</span>
+<span>+18</span>
+</div>
+</td>
+<td class="px-6 py-5 text-right">
+<button class="p-2 hover:bg-white/10 rounded-lg transition-colors">
+<span class="material-symbols-outlined text-slate-400">more_vert</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination -->
+<div class="px-6 py-4 flex items-center justify-between bg-slate-900/30 border-t border-white/5">
+<p class="text-sm text-slate-400">Показано 1-15 из 1,482 игроков</p>
+<div class="flex gap-2">
+<button class="p-2 rounded-lg bg-slate-800 text-slate-400 disabled:opacity-50" disabled="">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+<button class="size-10 rounded-lg bg-primary text-background-dark font-bold">1</button>
+<button class="size-10 rounded-lg bg-slate-800 text-slate-400 hover:text-white">2</button>
+<button class="size-10 rounded-lg bg-slate-800 text-slate-400 hover:text-white">3</button>
+<span class="flex items-center px-2 text-slate-400">...</span>
+<button class="size-10 rounded-lg bg-slate-800 text-slate-400 hover:text-white">99</button>
+<button class="p-2 rounded-lg bg-slate-800 text-slate-400 hover:text-white">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Call to Action Section -->
+<div class="mt-10 p-8 rounded-xl bg-gradient-to-r from-primary/20 to-accent-blue/20 border border-white/10 flex flex-col md:flex-row items-center justify-between gap-6">
+<div class="text-center md:text-left">
+<h3 class="text-2xl font-bold mb-2">Готовы организовать свой турнир?</h3>
+<p class="text-slate-300">Создавайте сетки, регистрируйте игроков и обновляйте рейтинг в реальном времени.</p>
+</div>
+<button class="whitespace-nowrap bg-primary text-background-dark px-8 py-4 rounded-xl font-bold text-lg hover:scale-105 transition-transform shadow-xl shadow-primary/25">
+                СОЗДАТЬ ТУРНИР
+            </button>
+</div>
+</main>
+<!-- Footer -->
+<footer class="mt-20 border-t border-white/5 bg-slate-900/50 py-12 px-6 lg:px-20">
+<div class="max-w-[1280px] mx-auto grid grid-cols-1 md:grid-cols-4 gap-10">
+<div class="col-span-1 md:col-span-2">
+<div class="flex items-center gap-3 mb-6">
+<div class="bg-primary/20 p-1.5 rounded-lg">
+<svg class="size-6 text-primary" fill="currentColor" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path d="M8.57829 8.57829C5.52816 11.6284 3.451 15.5145 2.60947 19.7452C1.76794 23.9758 2.19984 28.361 3.85056 32.3462C5.50128 36.3314 8.29667 39.7376 11.8832 42.134C15.4698 44.5305 19.6865 45.8096 24 45.8096C28.3135 45.8096 32.5302 44.5305 36.1168 42.134C39.7033 39.7375 42.4987 36.3314 44.1494 32.3462C45.8002 28.361 46.2321 23.9758 45.3905 19.7452C44.549 15.5145 42.4718 11.6284 39.4217 8.57829L24 24L8.57829 8.57829Z"></path>
+</svg>
+</div>
+<h2 class="text-xl font-bold tracking-tighter uppercase">Nagornaya</h2>
+</div>
+<p class="text-slate-400 max-w-sm mb-6">
+                    Профессиональная система рейтинга для пляжного волейбола. Создано спортсменами для спортсменов.
+                </p>
+<div class="flex gap-4">
+<a class="size-10 rounded-lg bg-slate-800 flex items-center justify-center hover:bg-primary/20 transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">share</span>
+</a>
+<a class="size-10 rounded-lg bg-slate-800 flex items-center justify-center hover:bg-primary/20 transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">mail</span>
+</a>
+</div>
+</div>
+<div>
+<h4 class="font-bold mb-6 text-white">Разделы</h4>
+<ul class="space-y-4 text-slate-400">
+<li><a class="hover:text-primary transition-colors" href="#">Рейтинг</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Турниры</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Площадки</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Правила</a></li>
+</ul>
+</div>
+<div>
+<h4 class="font-bold mb-6 text-white">Для организаторов</h4>
+<ul class="space-y-4 text-slate-400">
+<li><a class="hover:text-primary transition-colors" href="#">Личный кабинет</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">API</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Документация</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Поддержка</a></li>
+</ul>
+</div>
+</div>
+<div class="max-w-[1280px] mx-auto mt-12 pt-8 border-t border-white/5 text-center text-sm text-slate-500">
+            © 2024 NAGORNAYA Beach Volleyball Rating System. Все права защищены.
+        </div>
+</footer>
+</body></html>
