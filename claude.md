@@ -44,3 +44,20 @@ get-library-docs: topic="line chart" или нужная тема
 1. Перед использованием любой библиотеки — запроси документацию через Context7
 2. Работай поэтапно, как указано в промте
 3. После каждого этапа проверяй работоспособность
+
+## Деплой на сервер
+
+- **Хост:** 176.108.251.49 (nagornaya.duckdns.org)
+- **Пользователь:** artemfcsm
+- **SSH ключ:** ~/.ssh/temik_cloudru_key
+- **Директория на сервере:** /var/www/beach-volley
+
+### Команды деплоя
+
+```bash
+# Сборка
+npm run build
+
+# Деплой
+scp -i ~/.ssh/temik_cloudru_key -r dist/* artemfcsm@176.108.251.49:/var/www/beach-volley/
+```

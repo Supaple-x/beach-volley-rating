@@ -1,28 +1,24 @@
 /**
  * Beach Volleyball Elo Rating System
- * Main entry point
+ * Tournament page entry point
  */
 
-import { loadTournamentData, getRawTournamentData } from './modules/dataManager.js';
-import { initUI } from './modules/ui.js';
+import { initTournamentUI } from './modules/tournamentUI.js';
 
 // Raw tournament data
 import tournamentData from '../data/raw/nagornaya_2025-01-25.json';
 
 /**
- * Initialize the application
+ * Initialize the tournament page
  */
 async function init() {
-  console.log('🏐 NAGORNAYA Beach Volleyball Rating System');
+  console.log('Tournament page initializing...');
 
   try {
-    const data = loadTournamentData(tournamentData);
-    console.log(`✅ Loaded ${data.players.length} players, ${data.matches.length} matches`);
-
-    // Передаем и обработанные данные, и сырые данные турнира
-    initUI(data, tournamentData);
+    initTournamentUI(tournamentData);
+    console.log('Tournament page loaded successfully');
   } catch (error) {
-    console.error('❌ Error:', error);
+    console.error('Error:', error);
     document.body.innerHTML = `
       <div class="min-h-screen bg-background-dark flex items-center justify-center p-8">
         <div class="text-center">

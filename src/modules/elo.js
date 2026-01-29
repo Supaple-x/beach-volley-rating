@@ -5,9 +5,11 @@
 
 // Constants
 const INITIAL_RATING = 1500;
-const K_FACTOR_DEFAULT = 32;
-const K_FACTOR_CALIBRATION = 40;
-const CALIBRATION_GAMES = 15;
+const K_FACTOR_ELITE = 10;      // Для игроков с рейтингом 2400+
+const K_FACTOR_REGULAR = 20;   // Для игроков с рейтингом < 2400
+const K_FACTOR_NEW = 40;       // Для новичков (первые 30 игр)
+const CALIBRATION_GAMES = 30;  // Количество игр для калибровки
+const ELITE_RATING = 2400;     // Порог элитного рейтинга
 
 /**
  * Calculate expected score using Elo formula
@@ -21,12 +23,25 @@ export function calculateExpectedScore(playerRating, opponentRating) {
 }
 
 /**
- * Get K-factor based on number of games played
+ * Get K-factor based on rating and number of games played
+ * K = 10 для рейтинга 2400+
+ * K = 20 для рейтинга < 2400
+ * K = 40 для новичков (первые 30 игр)
  * @param {number} gamesPlayed - Number of games the player has played
+ * @param {number} currentRating - Player's current rating
  * @returns {number} K-factor to use
  */
-export function getKFactor(gamesPlayed) {
-  return gamesPlayed < CALIBRATION_GAMES ? K_FACTOR_CALIBRATION : K_FACTOR_DEFAULT;
+export function getKFactor(gamesPlayed, currentRating = INITIAL_RATING) {
+  // Новички - первые 30 игр
+  if (gamesPlayed < CALIBRATION_GAMES) {
+    return K_FACTOR_NEW;
+  }
+  // Элитные игроки - рейтинг 2400+
+  if (currentRating >= ELITE_RATING) {
+    return K_FACTOR_ELITE;
+  }
+  // Обычные игроки
+  return K_FACTOR_REGULAR;
 }
 
 /**
@@ -41,7 +56,7 @@ export function getKFactor(gamesPlayed) {
 export function calculateRatingChange(playerRating, opponentTeamRating, isWinner, gamesPlayed) {
   const expectedScore = calculateExpectedScore(playerRating, opponentTeamRating);
   const actualScore = isWinner ? 1 : 0;
-  const kFactor = getKFactor(gamesPlayed);
+  const kFactor = getKFactor(gamesPlayed, playerRating);
 
   return Math.round(kFactor * (actualScore - expectedScore));
 }
@@ -196,4 +211,4 @@ export function processAllMatches(matches) {
   };
 }
 
-export { INITIAL_RATING, K_FACTOR_DEFAULT, K_FACTOR_CALIBRATION, CALIBRATION_GAMES };
+export { INITIAL_RATING, K_FACTOR_ELITE, K_FACTOR_REGULAR, K_FACTOR_NEW, CALIBRATION_GAMES, ELITE_RATING };

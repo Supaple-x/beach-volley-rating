@@ -24,7 +24,7 @@ function normalizeName(name) {
  * Generate unique match ID
  * @param {string} tournament - Tournament name
  * @param {string} league - League name
- * @param {string} group - Group name
+ * @param {string} group - Group name or stage
  * @param {number} id - Match ID within group
  * @returns {string} Unique match ID
  */
@@ -33,6 +33,9 @@ function generateMatchId(tournament, league, group, id) {
   const leagueSlug = league.toLowerCase().replace(/\s+/g, '-');
   return `${tournamentSlug}_${leagueSlug}_${group}_${id}`;
 }
+
+// Хранилище сырых данных турнира для страницы турнира
+let rawTournamentDataStore = null;
 
 /**
  * Parse raw tournament data and extract all matches in processing order
@@ -43,15 +46,20 @@ export function parseRawTournamentData(rawData) {
   const matches = [];
   const { tournament, date, leagues } = rawData;
 
+  // Сохраняем сырые данные для страницы турнира
+  rawTournamentDataStore = rawData;
+
   console.log(`Processing tournament: ${tournament} (${date})`);
 
   // Process leagues in order: Высшая лига first, then Первая лига
-  // Within each league, process groups in order: A, B, etc.
+  // Within each league, process groups first, then playoff
   leagues.forEach(league => {
     console.log(`  League: ${league.name}`);
 
+    // Обработка групповых матчей (квалификация)
     league.groups.forEach(group => {
       console.log(`    Group ${group.name}: ${group.matches.length} matches`);
+      const stage = group.stage || 'qualification';
 
       group.matches.forEach(match => {
         // Skip draws (like match 16 in Первая лига B with score 15-15)
@@ -73,6 +81,7 @@ export function parseRawTournamentData(rawData) {
           tournament: tournament,
           league: league.name,
           group: group.name,
+          stage: stage,
           court: match.court,
           team1: team1,
           team2: team2,
@@ -81,10 +90,52 @@ export function parseRawTournamentData(rawData) {
         });
       });
     });
+
+    // Обработка плей-офф матчей
+    if (league.playoff && league.playoff.matches) {
+      console.log(`    Playoff: ${league.playoff.matches.length} matches`);
+
+      league.playoff.matches.forEach(match => {
+        // Skip draws
+        if (match.score[0] === match.score[1]) {
+          console.log(`      Skipping draw: Match ${match.id} (${match.score[0]}-${match.score[1]})`);
+          return;
+        }
+
+        // Determine winner
+        const winner = match.score[0] > match.score[1] ? 1 : 2;
+
+        // Normalize player names
+        const team1 = match.team1.map(normalizeName);
+        const team2 = match.team2.map(normalizeName);
+
+        matches.push({
+          id: generateMatchId(tournament, league.name, 'playoff', match.id),
+          date: date,
+          tournament: tournament,
+          league: league.name,
+          group: 'playoff',
+          stage: 'playoff',
+          round: match.round,
+          team1: team1,
+          team2: team2,
+          score: match.score,
+          winner: winner
+        });
+      });
+    }
   });
 
   console.log(`Total matches to process: ${matches.length}`);
   return matches;
+}
+
+/**
+ * Получить сырые данные турнира
+ * @returns {Object|null} Raw tournament data
+ */
+export function getRawTournamentData() {
+  return rawTournamentDataStore;
 }
 
 /**
