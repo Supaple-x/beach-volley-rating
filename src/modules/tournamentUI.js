@@ -6,6 +6,77 @@
 import { formatDate } from '../utils/helpers.js';
 
 let tournamentData = null;
+let currentGenderFilter = 'all'; // 'all', 'male', 'female'
+
+// Женские имена (русские)
+const FEMALE_NAMES = new Set([
+  'Мария', 'Анастасия', 'Юлия', 'Светлана', 'Ольга', 'Анна', 'Наталья', 'Екатерина',
+  'Елена', 'Ирина', 'Татьяна', 'Дарья', 'Ксения', 'Евгения', 'Инна', 'Василиса',
+  'Жанна', 'Нина', 'Преображенская Ек.', 'Неизвестная Ксения'
+]);
+
+/**
+ * Определяет пол игрока по имени
+ * @param {string} fullName - Полное имя игрока
+ * @returns {'male'|'female'} Пол игрока
+ */
+function getGender(fullName) {
+  // Проверяем полное имя
+  if (FEMALE_NAMES.has(fullName)) return 'female';
+
+  // Проверяем имя (второе слово обычно)
+  const parts = fullName.split(' ');
+  const firstName = parts.length > 1 ? parts[1] : parts[0];
+
+  if (FEMALE_NAMES.has(firstName)) return 'female';
+
+  // Эвристика по окончанию имени
+  if (firstName.endsWith('а') || firstName.endsWith('я') || firstName.endsWith('ья')) {
+    // Исключения для мужских имён на -а/-я
+    const maleExceptions = ['Никита', 'Илья', 'Кирилл'];
+    if (!maleExceptions.includes(firstName)) return 'female';
+  }
+
+  return 'male';
+}
+
+/**
+ * Рассчитывает очки по итальянской системе
+ * @param {number} myScore - Мои очки
+ * @param {number} opponentScore - Очки соперника
+ * @returns {number} Очки (3/2/1/0)
+ */
+function getItalianPoints(myScore, opponentScore) {
+  const diff = Math.abs(myScore - opponentScore);
+  const isBalanced = diff === 2;
+
+  if (myScore > opponentScore) {
+    return isBalanced ? 2 : 3; // Победа на балансе или чистая
+  } else {
+    return isBalanced ? 1 : 0; // Поражение на балансе или чистое
+  }
+}
+
+/**
+ * Рендерит заголовок таблицы с тултипом
+ * @param {string} label - Краткое название
+ * @param {string} title - Заголовок тултипа
+ * @param {string} description - Описание
+ * @returns {string} HTML
+ */
+function renderHeaderWithTooltip(label, title, description) {
+  const descriptionHtml = description.replace(/\\n/g, '<br>');
+  return `
+    <span class="tooltip-trigger inline-flex items-center gap-1 cursor-help">
+      ${label}
+      <span class="material-symbols-outlined text-[12px] text-slate-500">help</span>
+      <span class="tooltip-content normal-case tracking-normal font-normal text-left">
+        <span class="tooltip-title">${title}</span>
+        <span class="tooltip-text block">${descriptionHtml}</span>
+      </span>
+    </span>
+  `;
+}
 
 /**
  * Initialize Tournament UI
@@ -18,8 +89,51 @@ export function initTournamentUI(rawData) {
   document.getElementById('tournament-title').textContent = rawData.tournament;
   document.getElementById('tournament-date').textContent = formatDate(rawData.date);
 
+  // Добавляем фильтр по полу
+  renderGenderFilter();
+
+  // Рендерим контент
+  renderTournamentContent();
+}
+
+/**
+ * Рендерит фильтр по полу
+ */
+function renderGenderFilter() {
+  const filterContainer = document.getElementById('gender-filter');
+  if (!filterContainer) return;
+
+  filterContainer.innerHTML = `
+    <div class="flex items-center gap-2">
+      <span class="text-slate-400 text-sm">Фильтр:</span>
+      <button data-gender="all" class="gender-btn px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${currentGenderFilter === 'all' ? 'bg-primary text-background-dark' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}">Все</button>
+      <button data-gender="male" class="gender-btn px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${currentGenderFilter === 'male' ? 'bg-primary text-background-dark' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}">
+        <span class="hidden sm:inline">Мужчины</span>
+        <span class="sm:hidden">М</span>
+      </button>
+      <button data-gender="female" class="gender-btn px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${currentGenderFilter === 'female' ? 'bg-primary text-background-dark' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}">
+        <span class="hidden sm:inline">Женщины</span>
+        <span class="sm:hidden">Ж</span>
+      </button>
+    </div>
+  `;
+
+  // Обработчики кликов
+  filterContainer.querySelectorAll('.gender-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      currentGenderFilter = btn.dataset.gender;
+      renderGenderFilter();
+      renderTournamentContent();
+    });
+  });
+}
+
+/**
+ * Рендерит контент турнира
+ */
+function renderTournamentContent() {
   // Порядок: Первая лига, затем Высшая лига
-  const leagues = [...rawData.leagues].reverse();
+  const leagues = [...tournamentData.leagues].reverse();
 
   const container = document.getElementById('tournament-content');
   container.innerHTML = '';
@@ -63,7 +177,7 @@ function renderLeagueSection(league) {
   `;
 
   const groupsContainer = document.createElement('div');
-  groupsContainer.className = 'grid lg:grid-cols-2 gap-8';
+  groupsContainer.className = 'grid lg:grid-cols-2 gap-4';
 
   league.groups.forEach(group => {
     groupsContainer.appendChild(renderGroupSection(group, league.name));
@@ -81,7 +195,7 @@ function renderLeagueSection(league) {
 }
 
 /**
- * Calculate standings for a group
+ * Calculate standings for a group (Italian scoring system)
  * @param {Array} matches - Group matches
  * @returns {Array} Sorted standings
  */
@@ -99,11 +213,14 @@ function calculateStandings(matches) {
       if (!players.has(playerName)) {
         players.set(playerName, {
           name: playerName,
+          gender: getGender(playerName),
           games: 0,
           wins: 0,
           losses: 0,
-          pointsFor: 0,
-          pointsAgainst: 0
+          italianPoints: 0,
+          ballsFor: 0,
+          ballsAgainst: 0,
+          matchDetails: [] // Детали каждого матча
         });
       }
     });
@@ -111,34 +228,108 @@ function calculateStandings(matches) {
     // Team 1
     match.team1.forEach(playerName => {
       const p = players.get(playerName);
+      const myScore = match.score[0];
+      const oppScore = match.score[1];
+      const pts = getItalianPoints(myScore, oppScore);
       p.games++;
       if (team1Won) p.wins++; else p.losses++;
-      p.pointsFor += match.score[0];
-      p.pointsAgainst += match.score[1];
+      p.italianPoints += pts;
+      p.ballsFor += myScore;
+      p.ballsAgainst += oppScore;
+      p.matchDetails.push({
+        id: match.id,
+        myScore,
+        oppScore,
+        won: team1Won,
+        diff: Math.abs(myScore - oppScore),
+        points: pts
+      });
     });
 
     // Team 2
     match.team2.forEach(playerName => {
       const p = players.get(playerName);
+      const myScore = match.score[1];
+      const oppScore = match.score[0];
+      const pts = getItalianPoints(myScore, oppScore);
       p.games++;
       if (!team1Won) p.wins++; else p.losses++;
-      p.pointsFor += match.score[1];
-      p.pointsAgainst += match.score[0];
+      p.italianPoints += pts;
+      p.ballsFor += myScore;
+      p.ballsAgainst += oppScore;
+      p.matchDetails.push({
+        id: match.id,
+        myScore,
+        oppScore,
+        won: !team1Won,
+        diff: Math.abs(myScore - oppScore),
+        points: pts
+      });
     });
   });
 
-  // Конвертируем в массив и сортируем
+  // Конвертируем в массив, фильтруем по полу и сортируем
   return Array.from(players.values())
+    .filter(p => currentGenderFilter === 'all' || p.gender === currentGenderFilter)
     .map(p => ({
       ...p,
-      pointsDiff: p.pointsFor - p.pointsAgainst,
-      winRate: p.games > 0 ? Math.round((p.wins / p.games) * 100) : 0
+      ballsDiff: p.ballsFor - p.ballsAgainst
     }))
     .sort((a, b) => {
-      // Сначала по победам, затем по разнице очков
-      if (b.wins !== a.wins) return b.wins - a.wins;
-      return b.pointsDiff - a.pointsDiff;
+      // Сначала по итальянским очкам, затем по разнице мячей
+      if (b.italianPoints !== a.italianPoints) return b.italianPoints - a.italianPoints;
+      return b.ballsDiff - a.ballsDiff;
     });
+}
+
+/**
+ * Рендерит тултип с детальной статистикой игрока
+ * @param {Object} player - Данные игрока
+ * @returns {string} HTML тултипа
+ */
+function renderPlayerTooltip(player) {
+  const rows = player.matchDetails.map(m => {
+    const resultText = m.won ? 'Победа' : 'Поражение';
+    const resultClass = m.won ? 'text-green-400' : 'text-red-400';
+    const pointsText = m.diff === 2 ? (m.won ? '(на балансе)' : '(на балансе)') : (m.won ? '(чистая)' : '(чистое)');
+    return `
+      <tr class="border-b border-white/10">
+        <td class="px-1 py-0.5 text-slate-500">${m.id}</td>
+        <td class="px-1 py-0.5 text-center">${m.myScore}:${m.oppScore}</td>
+        <td class="px-1 py-0.5 ${resultClass}">${resultText}</td>
+        <td class="px-1 py-0.5 text-center">${m.diff}</td>
+        <td class="px-1 py-0.5 text-center font-bold text-primary">${m.points}</td>
+      </tr>
+    `;
+  }).join('');
+
+  return `
+    <div class="player-tooltip-content">
+      <div class="tooltip-title mb-2">${player.name}</div>
+      <table class="w-full text-[10px]">
+        <thead>
+          <tr class="text-slate-500 border-b border-white/20">
+            <th class="px-1 py-0.5 text-left">#</th>
+            <th class="px-1 py-0.5 text-center">Счёт</th>
+            <th class="px-1 py-0.5 text-left">Результат</th>
+            <th class="px-1 py-0.5 text-center">Разн.</th>
+            <th class="px-1 py-0.5 text-center">Очки</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows}
+        </tbody>
+        <tfoot>
+          <tr class="font-bold text-white border-t border-white/30">
+            <td class="px-1 py-1" colspan="2">Итого: ${player.games} игр</td>
+            <td class="px-1 py-1">${player.wins}В/${player.losses}П</td>
+            <td class="px-1 py-1 text-center">${player.ballsDiff > 0 ? '+' : ''}${player.ballsDiff}</td>
+            <td class="px-1 py-1 text-center text-primary">${player.italianPoints}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  `;
 }
 
 /**
@@ -153,42 +344,49 @@ function renderGroupSection(group, leagueName) {
 
   // Group header
   const header = document.createElement('div');
-  header.className = 'bg-slate-900/50 px-6 py-4 border-b border-white/5';
+  header.className = 'bg-slate-900/50 px-4 py-3 border-b border-white/5';
   header.innerHTML = `
-    <h4 class="font-bold text-lg">Группа ${group.name}</h4>
-    <p class="text-slate-400 text-sm">${group.matches.length} матчей</p>
+    <h4 class="font-bold">Группа ${group.name}</h4>
+    <p class="text-slate-400 text-xs">${group.matches.length} матчей</p>
   `;
   container.appendChild(header);
 
   // Standings table
   const standings = calculateStandings(group.matches);
   const tableContainer = document.createElement('div');
-  tableContainer.className = 'overflow-x-auto';
   tableContainer.innerHTML = `
-    <table class="w-full text-sm">
+    <table class="w-full text-xs">
       <thead>
-        <tr class="text-slate-400 text-[11px] uppercase tracking-wider border-b border-white/5">
-          <th class="px-4 py-3 text-left">#</th>
-          <th class="px-4 py-3 text-left">Игрок</th>
-          <th class="px-4 py-3 text-center">И</th>
-          <th class="px-4 py-3 text-center">В</th>
-          <th class="px-4 py-3 text-center">П</th>
-          <th class="px-4 py-3 text-center">О+</th>
-          <th class="px-4 py-3 text-center">О-</th>
-          <th class="px-4 py-3 text-center">±</th>
+        <tr class="text-slate-400 text-[10px] uppercase tracking-wider border-b border-white/5">
+          <th class="px-2 py-2 text-left w-6">#</th>
+          <th class="px-2 py-2 text-left">Игрок</th>
+          <th class="px-1 py-2 text-center">${renderHeaderWithTooltip('И', 'Игры', 'Количество сыгранных матчей')}</th>
+          <th class="px-1 py-2 text-center">${renderHeaderWithTooltip('В', 'Победы', 'Количество выигранных матчей')}</th>
+          <th class="px-1 py-2 text-center">${renderHeaderWithTooltip('П', 'Поражения', 'Количество проигранных матчей')}</th>
+          <th class="px-1 py-2 text-center font-bold text-primary">${renderHeaderWithTooltip('Очки', 'Итальянская система', '3 — чистая победа (разница > 2)\\n2 — победа на балансе (разница = 2)\\n1 — поражение на балансе\\n0 — чистое поражение')}</th>
+          <th class="px-1 py-2 text-center">${renderHeaderWithTooltip('М+', 'Мячи забитые', 'Сумма набранных очков')}</th>
+          <th class="px-1 py-2 text-center">${renderHeaderWithTooltip('М-', 'Мячи пропущенные', 'Сумма пропущенных очков')}</th>
+          <th class="px-1 py-2 text-center">${renderHeaderWithTooltip('±', 'Разница', 'М+ минус М-')}</th>
         </tr>
       </thead>
       <tbody class="divide-y divide-white/5">
         ${standings.map((p, i) => `
           <tr class="hover:bg-white/5">
-            <td class="px-4 py-2 text-slate-500 font-bold">${i + 1}</td>
-            <td class="px-4 py-2 font-medium">${p.name}</td>
-            <td class="px-4 py-2 text-center">${p.games}</td>
-            <td class="px-4 py-2 text-center text-green-400 font-bold">${p.wins}</td>
-            <td class="px-4 py-2 text-center text-red-400">${p.losses}</td>
-            <td class="px-4 py-2 text-center">${p.pointsFor}</td>
-            <td class="px-4 py-2 text-center">${p.pointsAgainst}</td>
-            <td class="px-4 py-2 text-center font-bold ${p.pointsDiff > 0 ? 'text-green-400' : p.pointsDiff < 0 ? 'text-red-400' : ''}">${p.pointsDiff > 0 ? '+' : ''}${p.pointsDiff}</td>
+            <td class="px-2 py-1.5 text-slate-500 font-bold">${i + 1}</td>
+            <td class="px-2 py-1.5 font-medium">
+              <span class="player-tooltip-trigger inline-flex items-center gap-1 cursor-help relative">
+                <span class="size-4 rounded-full text-[9px] font-bold flex items-center justify-center ${p.gender === 'female' ? 'bg-pink-500/20 text-pink-400' : 'bg-blue-500/20 text-blue-400'}">${p.gender === 'female' ? 'Ж' : 'М'}</span>
+                <span class="truncate hover:text-primary transition-colors">${p.name}</span>
+                <span class="player-tooltip">${renderPlayerTooltip(p)}</span>
+              </span>
+            </td>
+            <td class="px-1 py-1.5 text-center">${p.games}</td>
+            <td class="px-1 py-1.5 text-center text-green-400">${p.wins}</td>
+            <td class="px-1 py-1.5 text-center text-red-400">${p.losses}</td>
+            <td class="px-1 py-1.5 text-center font-bold text-primary text-sm">${p.italianPoints}</td>
+            <td class="px-1 py-1.5 text-center text-slate-300">${p.ballsFor}</td>
+            <td class="px-1 py-1.5 text-center text-slate-500">${p.ballsAgainst}</td>
+            <td class="px-1 py-1.5 text-center font-bold ${p.ballsDiff > 0 ? 'text-green-400' : p.ballsDiff < 0 ? 'text-red-400' : ''}">${p.ballsDiff > 0 ? '+' : ''}${p.ballsDiff}</td>
           </tr>
         `).join('')}
       </tbody>
