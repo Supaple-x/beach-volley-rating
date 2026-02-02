@@ -50,9 +50,14 @@ get-library-docs: topic="line chart" или нужная тема
 - **Хост:** 176.108.251.49 (nagornaya.duckdns.org)
 - **Пользователь:** artemfcsm
 - **SSH ключ:** ~/.ssh/temik_cloudru_key
-- **Директория на сервере:** /var/www/beach-volley
 
-### Команды деплоя
+### Директории на сервере
+
+- **Фронтенд:** /var/www/beach-volley
+- **Бэкенд (API):** /var/www/beach-volley-api
+- **База данных:** /var/www/beach-volley-api/db/volleyball.db
+
+### Команды деплоя фронтенда
 
 ```bash
 # Сборка
@@ -61,3 +66,36 @@ npm run build
 # Деплой
 scp -i ~/.ssh/temik_cloudru_key -r dist/* artemfcsm@176.108.251.49:/var/www/beach-volley/
 ```
+
+### Команды деплоя бэкенда
+
+```bash
+# Копирование файлов бэкенда
+scp -i ~/.ssh/temik_cloudru_key -r server/* artemfcsm@176.108.251.49:/var/www/beach-volley-api/
+
+# Установка зависимостей (на сервере)
+ssh -i ~/.ssh/temik_cloudru_key artemfcsm@176.108.251.49 "cd /var/www/beach-volley-api && npm install"
+
+# Перезапуск API
+ssh -i ~/.ssh/temik_cloudru_key artemfcsm@176.108.251.49 "pm2 restart beach-volley-api"
+```
+
+### Импорт турнира в БД
+
+```bash
+# На сервере
+cd /var/www/beach-volley-api
+node scripts/import-json.js <путь-к-json> <название-сезона> <год> <номер-этапа> <формат> <жеребьевка>
+
+# Пример:
+node scripts/import-json.js data/raw/tournament.json "VIII NAGORNAYA GRAND PRIX" 2026 1 mixed random
+```
+
+### API Endpoints
+
+- `GET /api/health` - проверка работоспособности
+- `GET /api/seasons` - список сезонов
+- `GET /api/seasons/:id/tournaments` - турниры сезона
+- `GET /api/tournaments/:id` - данные турнира
+- `GET /api/players` - список игроков
+- `GET /api/players/:id` - статистика игрока
