@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html class="dark" lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NAGORNAYA - Сквозной рейтинг</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#f2b90d",
+            "background-light": "#f8f7f5",
+            "background-dark": "#1a2744",
+            "accent-blue": "#38bdf8",
+          },
+          fontFamily: {
+            "display": ["Lexend", "sans-serif"]
+          },
+          borderRadius: {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+        },
+      },
+    }
+  </script>
+
+  <link rel="stylesheet" href="/src/styles/main.css">
+</head>
+
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen">
+
+  <!-- Top Navigation Bar -->
+  <header class="sticky top-0 z-50 glass-panel border-b border-white/10 px-6 lg:px-20 py-4">
+    <div class="max-w-[1280px] mx-auto flex items-center justify-between">
+      <a href="/" class="flex items-center gap-3">
+        <img src="/logo.png" alt="NAGORNAYA" class="h-14">
+      </a>
+      <nav class="hidden md:flex items-center gap-10">
+        <a class="text-slate-400 hover:text-white transition-colors" href="/">Турнир</a>
+        <a class="text-primary font-semibold border-b-2 border-primary pb-1" href="/rating.html">Сквозной рейтинг</a>
+      </nav>
+      <div class="flex items-center gap-4">
+        <button class="bg-primary hover:bg-primary/90 text-background-dark px-5 py-2 rounded-lg font-bold text-sm transition-all shadow-lg shadow-primary/20">
+          ПРОФИЛЬ
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-[1280px] mx-auto px-6 lg:px-20 py-10">
+    <!-- Welcome Section -->
+    <div class="flex flex-col md:flex-row md:items-end justify-between mb-8">
+      <div>
+        <h1 class="text-4xl font-bold tracking-tight mb-2">Сквозной рейтинг Elo</h1>
+        <p class="text-slate-400" id="last-update">NAGORNAYA GRAND PRIX</p>
+      </div>
+      <div class="mt-6 md:mt-0 flex gap-3">
+        <button class="flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 border border-white/5 transition-colors">
+          <span class="material-symbols-outlined text-sm">download</span>
+          <span class="text-sm font-medium">Экспорт CSV</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Stats Overview -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10" id="stats-cards">
+      <div class="glass-panel p-6 rounded-xl relative overflow-hidden group">
+        <div class="absolute -right-4 -top-4 size-24 bg-primary/10 rounded-full blur-2xl group-hover:bg-primary/20 transition-all"></div>
+        <p class="text-slate-400 text-sm font-medium mb-1 uppercase tracking-wider">Всего игроков</p>
+        <div class="flex items-end gap-2">
+          <p class="text-3xl font-bold" id="stat-players">--</p>
+        </div>
+      </div>
+      <div class="glass-panel p-6 rounded-xl relative overflow-hidden group">
+        <div class="absolute -right-4 -top-4 size-24 bg-accent-blue/10 rounded-full blur-2xl group-hover:bg-accent-blue/20 transition-all"></div>
+        <p class="text-slate-400 text-sm font-medium mb-1 uppercase tracking-wider">Всего матчей</p>
+        <div class="flex items-end gap-2">
+          <p class="text-3xl font-bold" id="stat-matches">--</p>
+        </div>
+      </div>
+      <div class="glass-panel p-6 rounded-xl relative overflow-hidden group">
+        <div class="absolute -right-4 -top-4 size-24 bg-purple-500/10 rounded-full blur-2xl group-hover:bg-purple-500/20 transition-all"></div>
+        <p class="text-slate-400 text-sm font-medium mb-1 uppercase tracking-wider">Средний Elo</p>
+        <div class="flex items-end gap-2">
+          <p class="text-3xl font-bold" id="stat-avg-elo">--</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filters and Search -->
+    <div class="glass-panel p-4 rounded-xl mb-6 flex flex-col lg:flex-row items-center gap-4">
+      <div class="relative flex-1 w-full">
+        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+        <input
+          id="search-input"
+          class="w-full bg-slate-900/50 border-white/10 rounded-lg pl-12 pr-4 py-3 focus:ring-primary focus:border-primary text-white placeholder:text-slate-500"
+          placeholder="Поиск игрока по имени..."
+          type="text"
+        />
+      </div>
+      <div class="flex items-center gap-3 w-full lg:w-auto">
+        <select id="league-filter" class="flex-1 lg:flex-none px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg hover:border-slate-500 transition-colors text-sm font-medium">
+          <option value="all">Все лиги</option>
+          <option value="ВЫСШАЯ ЛИГА">Высшая лига</option>
+          <option value="ПЕРВАЯ ЛИГА">Первая лига</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Leaderboard Table -->
+    <div class="glass-panel rounded-xl overflow-hidden shadow-2xl">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="bg-slate-900/50 text-slate-400 uppercase text-[11px] font-bold tracking-[0.1em] border-b border-white/5">
+              <th class="px-6 py-4 w-20">Место</th>
+              <th class="px-6 py-4">Игрок</th>
+              <th class="px-6 py-4 text-center">
+                <span class="tooltip-trigger">
+                  Elo Рейтинг
+                  <span class="material-symbols-outlined text-[14px] text-slate-500">help</span>
+                  <div class="tooltip-content normal-case tracking-normal font-normal">
+                    <div class="tooltip-title">Система рейтинга Elo</div>
+                    <p class="tooltip-text">Рейтинг Elo — математическая система оценки силы игроков, изначально разработанная для шахмат.</p>
+                    <p class="tooltip-text"><strong class="text-white">Начальный рейтинг:</strong> 1500 очков</p>
+                    <p class="tooltip-text"><strong class="text-white">K-фактор:</strong> 40 (первые 15 игр) → 32</p>
+                    <div class="tooltip-formula">ΔR = K × (S - E)</div>
+                    <p class="tooltip-note">S = результат (1 победа / 0 поражение)<br>E = ожидаемый результат на основе разницы рейтингов</p>
+                  </div>
+                </span>
+              </th>
+              <th class="px-6 py-4 text-center">Игры</th>
+              <th class="px-6 py-4 text-center">
+                <span class="tooltip-trigger">
+                  Винрейт
+                  <span class="material-symbols-outlined text-[14px] text-slate-500">help</span>
+                  <div class="tooltip-content normal-case tracking-normal font-normal">
+                    <div class="tooltip-title">Процент побед (Winrate)</div>
+                    <p class="tooltip-text">Показывает долю выигранных матчей от общего числа сыгранных.</p>
+                    <div class="tooltip-formula">Винрейт = Победы ÷ Всего игр × 100%</div>
+                    <p class="tooltip-note">
+                      <span class="text-green-400">●</span> ≥50% — положительный<br>
+                      <span class="text-red-400">●</span> &lt;50% — отрицательный
+                    </p>
+                  </div>
+                </span>
+              </th>
+              <th class="px-6 py-4 text-center">Динамика</th>
+            </tr>
+          </thead>
+          <tbody id="rating-tbody" class="divide-y divide-white/5">
+            <!-- Rows will be inserted here by JavaScript -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="px-6 py-4 flex items-center justify-between bg-slate-900/30 border-t border-white/5">
+        <p class="text-sm text-slate-400" id="pagination-info">Загрузка...</p>
+        <div class="flex gap-2" id="pagination-controls">
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="mt-20 border-t border-white/5 bg-slate-900/50 py-12 px-6 lg:px-20">
+    <div class="max-w-[1280px] mx-auto">
+      <div class="flex items-center gap-3 mb-6">
+        <img src="/logo.png" alt="NAGORNAYA" class="h-12">
+      </div>
+      <p class="text-slate-500 text-sm max-w-sm mb-6">
+        Профессиональная система рейтинга для пляжного волейбола.
+      </p>
+      <div class="pt-8 border-t border-white/5 text-sm text-slate-500">
+        &copy; 2025 NAGORNAYA Beach Volleyball Rating System
+      </div>
+    </div>
+  </footer>
+
+  <!-- Player Profile Modal -->
+  <div class="modal-overlay fixed inset-0 bg-black/70 z-[100] flex items-center justify-center p-4" id="modal-overlay">
+    <div class="modal-content glass-panel rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto relative">
+      <button class="absolute top-4 right-4 size-10 rounded-full bg-slate-800 hover:bg-red-500 flex items-center justify-center transition-colors z-10" id="modal-close">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+      <div id="modal-content" class="p-6 lg:p-8">
+        <!-- Modal content will be inserted here -->
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

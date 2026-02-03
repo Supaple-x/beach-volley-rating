@@ -218,7 +218,7 @@ function renderSeasonRating() {
       <div class="bg-slate-900/50 px-4 py-3 border-b border-white/5 flex items-center justify-between">
         <div class="flex items-center gap-2">
           <span class="material-symbols-outlined text-primary">leaderboard</span>
-          <h3 class="font-bold">Рейтинг сезона: ${seasonRatingData.season.name}</h3>
+          <h3 class="font-bold text-sm">Рейтинг сезона: <span class="text-xs text-slate-300">${seasonRatingData.season.name}</span></h3>
         </div>
         <span class="text-slate-400 text-sm">${filteredPlayers.length} игроков</span>
       </div>

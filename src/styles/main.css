@@ -1,12 +1,12 @@
 .glass-panel {
-  background: rgba(30, 41, 59, 0.7);
+  background: rgba(26, 39, 68, 0.7);
   backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 .material-symbols-outlined {
   font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
 }
-.medal-gold { color: #fbbf24; }
+.medal-gold { color: #f2b90d; }
 .medal-silver { color: #94a3b8; }
 .medal-bronze { color: #b45309; }
 
@@ -43,7 +43,7 @@
   transform: translateX(-50%);
   width: 300px;
   padding: 16px;
-  background: #0f172a;
+  background: #1a2744;
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 12px;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
@@ -63,7 +63,7 @@
   left: 50%;
   transform: translateX(-50%);
   border: 8px solid transparent;
-  border-bottom-color: #0f172a;
+  border-bottom-color: #1a2744;
 }
 .tooltip-trigger:hover .tooltip-content {
   opacity: 1;
@@ -71,7 +71,7 @@
 }
 .tooltip-title {
   font-weight: 700;
-  color: #f27f0d;
+  color: #f2b90d;
   margin-bottom: 8px;
   font-size: 14px;
 }
@@ -105,7 +105,7 @@
   left: calc(100% + 16px);
   min-width: 320px;
   padding: 12px;
-  background: #0f172a;
+  background: #1a2744;
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 10px;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
@@ -121,7 +121,7 @@
   top: 10px;
   right: 100%;
   border: 8px solid transparent;
-  border-right-color: #0f172a;
+  border-right-color: #1a2744;
 }
 .player-tooltip-trigger:hover .player-tooltip {
   opacity: 1;
@@ -147,7 +147,7 @@
 .player-tooltip tr:last-child td {
   border-bottom: none;
   font-weight: 700;
-  color: #f27f0d;
+  color: #f2b90d;
 }
 .player-tooltip .win {
   color: #4ade80;
@@ -167,7 +167,7 @@
   transform: translateX(-50%);
   min-width: 280px;
   padding: 10px;
-  background: #0f172a;
+  background: #1a2744;
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 10px;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
@@ -184,7 +184,7 @@
   left: 50%;
   transform: translateX(-50%);
   border: 8px solid transparent;
-  border-bottom-color: #0f172a;
+  border-bottom-color: #1a2744;
 }
 .stage-tooltip-trigger:hover .stage-tooltip {
   opacity: 1;

@@ -12,7 +12,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
-        tournament: resolve(__dirname, 'tournament.html'),
+        rating: resolve(__dirname, 'rating.html'),
       },
     },
   },
