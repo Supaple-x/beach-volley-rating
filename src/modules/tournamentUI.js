@@ -96,6 +96,151 @@ export function initTournamentUI(rawData) {
   renderTournamentContent();
 }
 
+// === Сводная таблица рейтинга сезона ===
+
+let seasonRatingData = null;
+
+/**
+ * Initialize Season Rating Table
+ * @param {Object} data - Season rating data from API
+ */
+export function initSeasonRating(data) {
+  seasonRatingData = data;
+  renderSeasonRating();
+}
+
+/**
+ * Рендерит тултип с детализацией матчей этапа
+ * @param {Object} stageData - Данные этапа игрока
+ * @returns {string} HTML
+ */
+function renderStageTooltip(stageData) {
+  if (!stageData || stageData.matches.length === 0) return '';
+
+  const rows = stageData.matches.map(m => {
+    const resultClass = m.won ? 'text-green-400' : 'text-red-400';
+    const stageLabel = m.stage === 'playoff' ? '<span class="text-primary text-[9px]">ПО</span>' : '';
+    return `
+      <tr class="border-b border-white/10">
+        <td class="px-1 py-0.5 text-slate-400 text-[9px]">${stageLabel}</td>
+        <td class="px-1 py-0.5 text-[10px]">${m.vs}</td>
+        <td class="px-1 py-0.5 text-center ${resultClass}">${m.score}</td>
+        <td class="px-1 py-0.5 text-center font-bold text-primary">${m.points}</td>
+      </tr>
+    `;
+  }).join('');
+
+  return `
+    <div class="stage-tooltip-content">
+      <table class="w-full text-[10px]">
+        <thead>
+          <tr class="text-slate-500 border-b border-white/20">
+            <th class="px-1 py-0.5"></th>
+            <th class="px-1 py-0.5 text-left">Соперники</th>
+            <th class="px-1 py-0.5 text-center">Счёт</th>
+            <th class="px-1 py-0.5 text-center">Очки</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows}
+        </tbody>
+        <tfoot>
+          <tr class="font-bold text-white border-t border-white/30">
+            <td colspan="3" class="px-1 py-1">Итого: ${stageData.matches.length} матчей</td>
+            <td class="px-1 py-1 text-center text-primary">${stageData.points}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  `;
+}
+
+/**
+ * Рендерит сводную таблицу рейтинга
+ */
+function renderSeasonRating() {
+  const container = document.getElementById('season-rating');
+  if (!container || !seasonRatingData) return;
+
+  // Фильтруем игроков по полу
+  const filteredPlayers = seasonRatingData.players.filter(p =>
+    currentGenderFilter === 'all' || p.gender === currentGenderFilter
+  );
+
+  // Заголовки столбцов (этапы)
+  const stageHeaders = seasonRatingData.stages.map(s => {
+    const hasData = s.tournamentId !== null;
+    return `<th class="px-1 py-2 text-center min-w-[40px] ${hasData ? '' : 'text-slate-600'}">${s.stageNumber || 'Ф'}</th>`;
+  }).join('');
+
+  // Строки игроков
+  const playerRows = filteredPlayers.map((player, index) => {
+    const genderIcon = player.gender === 'female'
+      ? '<span class="size-4 rounded-full text-[9px] font-bold flex items-center justify-center bg-pink-500/20 text-pink-400">Ж</span>'
+      : '<span class="size-4 rounded-full text-[9px] font-bold flex items-center justify-center bg-blue-500/20 text-blue-400">М</span>';
+
+    // Ячейки с очками по этапам
+    const stageCells = seasonRatingData.stages.map(s => {
+      const stageKey = s.stageNumber || 'final';
+      const stageData = player.stages[stageKey];
+
+      if (!stageData) {
+        return '<td class="px-1 py-1.5 text-center text-slate-700">—</td>';
+      }
+
+      return `
+        <td class="px-1 py-1.5 text-center">
+          <span class="stage-tooltip-trigger cursor-help relative inline-block">
+            <span class="font-medium text-slate-200 hover:text-primary transition-colors">${stageData.points}</span>
+            <span class="stage-tooltip">${renderStageTooltip(stageData)}</span>
+          </span>
+        </td>
+      `;
+    }).join('');
+
+    return `
+      <tr class="hover:bg-white/5 border-b border-white/5">
+        <td class="px-2 py-1.5 text-slate-500 font-bold">${index + 1}</td>
+        <td class="px-2 py-1.5 font-medium whitespace-nowrap">
+          <span class="inline-flex items-center gap-1">
+            ${genderIcon}
+            <span class="truncate max-w-[140px]">${player.name}</span>
+          </span>
+        </td>
+        ${stageCells}
+        <td class="px-2 py-1.5 text-center font-bold text-primary text-sm">${player.total}</td>
+      </tr>
+    `;
+  }).join('');
+
+  container.innerHTML = `
+    <div class="glass-panel rounded-xl overflow-hidden">
+      <div class="bg-slate-900/50 px-4 py-3 border-b border-white/5 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-primary">leaderboard</span>
+          <h3 class="font-bold">Рейтинг сезона: ${seasonRatingData.season.name}</h3>
+        </div>
+        <span class="text-slate-400 text-sm">${filteredPlayers.length} игроков</span>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-xs">
+          <thead>
+            <tr class="text-slate-400 text-[10px] uppercase tracking-wider border-b border-white/5 bg-slate-900/30">
+              <th class="px-2 py-2 text-left w-8">#</th>
+              <th class="px-2 py-2 text-left min-w-[160px]">Игрок</th>
+              ${stageHeaders}
+              <th class="px-2 py-2 text-center min-w-[50px] text-primary">Σ</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${playerRows}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
 /**
  * Рендерит фильтр по полу
  */
@@ -123,6 +268,7 @@ function renderGenderFilter() {
     btn.addEventListener('click', () => {
       currentGenderFilter = btn.dataset.gender;
       renderGenderFilter();
+      renderSeasonRating(); // Обновляем таблицу рейтинга
       renderTournamentContent();
     });
   });

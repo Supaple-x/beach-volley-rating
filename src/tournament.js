@@ -3,7 +3,7 @@
  * Tournament page entry point
  */
 
-import { initTournamentUI } from './modules/tournamentUI.js';
+import { initTournamentUI, initSeasonRating } from './modules/tournamentUI.js';
 
 // API base URL (относительный путь для production)
 const API_BASE = '/api';
@@ -32,8 +32,21 @@ async function fetchTournamentData(tournamentId) {
 }
 
 /**
- * Загрузить список сезонов и последний турнир
+ * Загрузить рейтинг сезона
+ * @param {number} seasonId
  * @returns {Promise<Object>}
+ */
+async function fetchSeasonRating(seasonId) {
+  const response = await fetch(`${API_BASE}/seasons/${seasonId}/rating`);
+  if (!response.ok) {
+    throw new Error('Не удалось загрузить рейтинг сезона');
+  }
+  return response.json();
+}
+
+/**
+ * Загрузить список сезонов и последний турнир
+ * @returns {Promise<{tournament: Object, seasonId: number}>}
  */
 async function fetchLatestTournament() {
   // Получаем список сезонов
@@ -59,9 +72,10 @@ async function fetchLatestTournament() {
     throw new Error('Нет турниров в сезоне');
   }
 
-  // Возвращаем последний турнир
+  // Возвращаем последний турнир и ID сезона
   const latestTournament = tournaments[tournaments.length - 1];
-  return fetchTournamentData(latestTournament.id);
+  const tournamentData = await fetchTournamentData(latestTournament.id);
+  return { tournament: tournamentData, seasonId: latestSeason.id };
 }
 
 /**
@@ -75,13 +89,27 @@ async function init() {
     const tournamentId = getTournamentIdFromUrl();
 
     let tournamentData;
+    let seasonId;
+
     if (tournamentId) {
       tournamentData = await fetchTournamentData(tournamentId);
+      // Получаем ID сезона из первого сезона (пока так)
+      const seasons = await fetch(`${API_BASE}/seasons`).then(r => r.json());
+      seasonId = seasons[0]?.id;
     } else {
       // Если ID не указан, загружаем последний турнир
-      tournamentData = await fetchLatestTournament();
+      const result = await fetchLatestTournament();
+      tournamentData = result.tournament;
+      seasonId = result.seasonId;
     }
 
+    // Загружаем и отображаем рейтинг сезона
+    if (seasonId) {
+      const ratingData = await fetchSeasonRating(seasonId);
+      initSeasonRating(ratingData);
+    }
+
+    // Отображаем данные турнира
     initTournamentUI(tournamentData);
     console.log('Tournament page loaded successfully');
   } catch (error) {

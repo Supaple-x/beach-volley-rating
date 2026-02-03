@@ -140,3 +140,151 @@ export function getPlayerStats(playerId) {
 
   return { ...player, matches };
 }
+
+// Рассчитать очки по итальянской системе
+function getItalianPoints(myScore, oppScore) {
+  if (myScore === oppScore) return 0;
+  const diff = Math.abs(myScore - oppScore);
+  const isBalanced = diff === 2;
+  if (myScore > oppScore) {
+    return isBalanced ? 2 : 3;
+  } else {
+    return isBalanced ? 1 : 0;
+  }
+}
+
+// Получить сводный рейтинг сезона
+export function getSeasonRating(seasonId) {
+  const season = db.prepare('SELECT * FROM seasons WHERE id = ?').get(seasonId);
+  if (!season) return null;
+
+  // Получаем все турниры сезона
+  const tournaments = db.prepare(`
+    SELECT * FROM tournaments WHERE season_id = ? ORDER BY stage_number, date
+  `).all(seasonId);
+
+  // Структура этапов (10 этапов + финал)
+  const stages = [];
+  for (let i = 1; i <= 10; i++) {
+    const tournament = tournaments.find(t => t.stage_number === i);
+    stages.push({
+      stageNumber: i,
+      name: `${i} этап`,
+      tournamentId: tournament?.id || null,
+      date: tournament?.date || null
+    });
+  }
+  // Добавляем финал
+  const finalTournament = tournaments.find(t => t.stage_number === null);
+  stages.push({
+    stageNumber: null,
+    name: 'Финал',
+    tournamentId: finalTournament?.id || null,
+    date: finalTournament?.date || null
+  });
+
+  // Получаем все матчи сезона с детализацией
+  const allMatches = db.prepare(`
+    SELECT
+      m.*,
+      t.id as tournament_id,
+      t.stage_number,
+      g.stage as group_stage,
+      p1.id as p1_id, p1.name as p1_name, p1.gender as p1_gender,
+      p2.id as p2_id, p2.name as p2_name, p2.gender as p2_gender,
+      p3.id as p3_id, p3.name as p3_name, p3.gender as p3_gender,
+      p4.id as p4_id, p4.name as p4_name, p4.gender as p4_gender
+    FROM matches m
+    JOIN groups g ON m.group_id = g.id
+    JOIN leagues l ON g.league_id = l.id
+    JOIN tournaments t ON l.tournament_id = t.id
+    JOIN players p1 ON m.team1_player1_id = p1.id
+    JOIN players p2 ON m.team1_player2_id = p2.id
+    JOIN players p3 ON m.team2_player1_id = p3.id
+    JOIN players p4 ON m.team2_player2_id = p4.id
+    WHERE t.season_id = ?
+    ORDER BY t.stage_number, m.match_number
+  `).all(seasonId);
+
+  // Собираем статистику по игрокам
+  const playersMap = new Map();
+
+  for (const match of allMatches) {
+    const stageKey = match.stage_number || 'final';
+    const team1Won = match.score1 > match.score2;
+
+    // Обрабатываем team1
+    [
+      { id: match.p1_id, name: match.p1_name, gender: match.p1_gender },
+      { id: match.p2_id, name: match.p2_name, gender: match.p2_gender }
+    ].forEach(player => {
+      if (!playersMap.has(player.id)) {
+        playersMap.set(player.id, {
+          id: player.id,
+          name: player.name,
+          gender: player.gender,
+          stages: {},
+          total: 0
+        });
+      }
+      const p = playersMap.get(player.id);
+      if (!p.stages[stageKey]) {
+        p.stages[stageKey] = { points: 0, matches: [] };
+      }
+      const pts = getItalianPoints(match.score1, match.score2);
+      p.stages[stageKey].points += pts;
+      p.stages[stageKey].matches.push({
+        partner: player.id === match.p1_id ? match.p2_name : match.p1_name,
+        vs: `${match.p3_name} + ${match.p4_name}`,
+        score: `${match.score1}:${match.score2}`,
+        won: team1Won,
+        diff: Math.abs(match.score1 - match.score2),
+        points: pts,
+        stage: match.group_stage
+      });
+      p.total += pts;
+    });
+
+    // Обрабатываем team2
+    [
+      { id: match.p3_id, name: match.p3_name, gender: match.p3_gender },
+      { id: match.p4_id, name: match.p4_name, gender: match.p4_gender }
+    ].forEach(player => {
+      if (!playersMap.has(player.id)) {
+        playersMap.set(player.id, {
+          id: player.id,
+          name: player.name,
+          gender: player.gender,
+          stages: {},
+          total: 0
+        });
+      }
+      const p = playersMap.get(player.id);
+      if (!p.stages[stageKey]) {
+        p.stages[stageKey] = { points: 0, matches: [] };
+      }
+      const pts = getItalianPoints(match.score2, match.score1);
+      p.stages[stageKey].points += pts;
+      p.stages[stageKey].matches.push({
+        partner: player.id === match.p3_id ? match.p4_name : match.p3_name,
+        vs: `${match.p1_name} + ${match.p2_name}`,
+        score: `${match.score2}:${match.score1}`,
+        won: !team1Won,
+        diff: Math.abs(match.score1 - match.score2),
+        points: pts,
+        stage: match.group_stage
+      });
+      p.total += pts;
+    });
+  }
+
+  // Конвертируем в массив и сортируем по total
+  const players = Array.from(playersMap.values())
+    .sort((a, b) => b.total - a.total);
+
+  return {
+    season,
+    stages,
+    players
+  };
+}

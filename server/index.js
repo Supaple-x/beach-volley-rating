@@ -5,7 +5,8 @@ import db, {
   getTournamentsBySeason,
   getTournamentData,
   getAllPlayers,
-  getPlayerStats
+  getPlayerStats,
+  getSeasonRating
 } from './db/index.js';
 
 const app = express();
@@ -36,6 +37,20 @@ app.get('/api/seasons/:id/tournaments', (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Ошибка получения турниров' });
+  }
+});
+
+// Получить сводный рейтинг сезона
+app.get('/api/seasons/:id/rating', (req, res) => {
+  try {
+    const rating = getSeasonRating(req.params.id);
+    if (!rating) {
+      return res.status(404).json({ error: 'Сезон не найден' });
+    }
+    res.json(rating);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Ошибка получения рейтинга сезона' });
   }
 });
 
